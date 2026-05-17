@@ -1,0 +1,16 @@
+{
+  "wordbooks": [
+    {
+      "language": "english",
+      "name": "기본 영어 단어장",
+      "file": "english.txt",
+      "default": true
+    },
+    {
+      "language": "japanese",
+      "name": "기본 일본어 단어장",
+      "file": "japanese.txt",
+      "default": true
+    }
+  ]
+}

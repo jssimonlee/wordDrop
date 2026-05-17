@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="GitHub Pages에서 실행되는 산성비 단어 타이핑 게임"
+    />
+    <title>Word Drop Acid Rain</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">WD</span>
+          <div>
+            <h1>산성비 타자장</h1>
+            <p id="statusText">준비</p>
+          </div>
+        </div>
+
+        <div class="controls" aria-label="게임 설정">
+          <div class="segmented" role="group" aria-label="언어">
+            <button
+              class="language-btn active"
+              type="button"
+              data-language="english"
+            >
+              영어
+            </button>
+            <button class="language-btn" type="button" data-language="japanese">
+              일본어
+            </button>
+          </div>
+
+          <div class="segmented" role="group" aria-label="모드">
+            <button class="mode-btn active" type="button" data-mode="meaning">
+              A 뜻
+            </button>
+            <button class="mode-btn" type="button" data-mode="spelling">
+              B 스펠링
+            </button>
+          </div>
+
+          <div class="segmented" role="group" aria-label="난이도">
+            <button class="difficulty-btn" type="button" data-difficulty="easy">
+              쉬움
+            </button>
+            <button
+              class="difficulty-btn active"
+              type="button"
+              data-difficulty="normal"
+            >
+              보통
+            </button>
+            <button class="difficulty-btn" type="button" data-difficulty="hard">
+              어려움
+            </button>
+          </div>
+
+          <button id="wordbookButton" class="tool-btn" type="button">
+            단어장 입력
+          </button>
+        </div>
+      </header>
+
+      <section class="scorebar" aria-label="점수판">
+        <div>
+          <span class="label">점수</span>
+          <strong id="scoreValue">0</strong>
+        </div>
+        <div>
+          <span class="label">콤보</span>
+          <strong id="comboValue">0</strong>
+        </div>
+        <div>
+          <span class="label">생명</span>
+          <strong id="lifeValue">5</strong>
+        </div>
+        <div>
+          <span class="label">재등장</span>
+          <strong id="retryValue">0</strong>
+        </div>
+      </section>
+
+      <section class="stage-wrap">
+        <div class="stage" id="stage" aria-label="게임 화면">
+          <canvas id="particleCanvas" aria-hidden="true"></canvas>
+          <div class="rain-layer" aria-hidden="true"></div>
+          <div class="hint-line" id="hintLine" aria-hidden="true"></div>
+          <div class="drops" id="drops"></div>
+          <div class="ready-panel" id="readyPanel">
+            <span>A 뜻</span>
+            <strong>apple 또는 りんご</strong>
+            <b>사과</b>
+          </div>
+        </div>
+      </section>
+
+      <form class="typing-dock" id="typingForm" autocomplete="off">
+        <input
+          id="answerInput"
+          type="text"
+          inputmode="text"
+          spellcheck="false"
+          aria-label="정답 입력"
+          placeholder="정답"
+          disabled
+        />
+        <button id="startButton" class="primary-btn" type="button">시작</button>
+        <button id="pauseButton" type="button" disabled>정지</button>
+      </form>
+    </main>
+
+    <div
+      id="wordbookPanel"
+      class="wordbook-panel hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wordbookTitle"
+      aria-hidden="true"
+    >
+      <section class="wordbook-modal">
+        <div class="wordbook-head">
+          <h2 id="wordbookTitle">단어장 입력</h2>
+          <button id="wordbookCloseButton" type="button" aria-label="닫기">
+            닫기
+          </button>
+        </div>
+
+        <div class="format-guide">
+          <div>
+            <h3>영어 TXT/Excel</h3>
+            <p>TXT는 탭 구분, Excel은 열 순서대로 읽습니다.</p>
+            <pre>apple	사과
+wind	바람
+school	학교</pre>
+          </div>
+          <div>
+            <h3>일본어 TXT/Excel</h3>
+            <p>TXT는 탭 구분, Excel은 A열 한자, B열 히라가나/가타가나, C열 한국어입니다.</p>
+            <pre>林檎	りんご	사과
+学校	がっこう	학교
+コーヒー	コーヒー	커피</pre>
+          </div>
+        </div>
+
+        <p id="wordbookGuide" class="wordbook-guide">
+          현재 선택된 언어의 단어장으로 불러옵니다. wordbooks 폴더 파일은
+          manifest.json에 등록하면 아래 목록에 표시됩니다.
+        </p>
+
+        <div class="folder-picker">
+          <label for="folderWordbookSelect">wordbooks 폴더</label>
+          <select id="folderWordbookSelect"></select>
+          <button id="loadFolderWordbookButton" type="button">
+            폴더 단어장 불러오기
+          </button>
+        </div>
+
+        <label class="file-picker">
+          <span>파일 선택</span>
+          <input id="wordbookFile" type="file" accept=".txt,.tsv,.xls,.xlsx" />
+        </label>
+
+        <p id="wordbookStatus" class="wordbook-status">
+          wordbooks 폴더의 단어장을 불러오는 중입니다.
+        </p>
+
+        <div class="wordbook-actions">
+          <button id="resetWordbookButton" type="button">기본 파일 불러오기</button>
+          <button id="wordbookDoneButton" class="primary-btn" type="button">
+            완료
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
